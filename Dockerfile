@@ -1,41 +1,40 @@
-# Use official PHP 8.1 image with needed extensions
-FROM php:8.1-fpm
+# ----------------------
+# Stage 1: Build dependencies
+# ----------------------
+FROM composer:2 AS vendor
+
+WORKDIR /app
+
+# Copy composer files only (caching layer)
+COPY composer.json composer.lock ./
+
+# Install dependencies (production only)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+# ----------------------
+# Stage 2: Application
+# ----------------------
+FROM php:8.2-fpm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    zip \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    git unzip curl libpng-dev libonig-dev libxml2-dev zip \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Set working directory
 WORKDIR /var/www/html
 
-# Copy only composer files first (for caching)
-COPY composer.json composer.lock ./
-
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --prefer-dist
-
-# Now copy the full app
+# Copy app source code
 COPY . .
 
-# Run Laravel scripts after code is copied
-RUN composer dump-autoload --optimize
+# Copy vendor folder from builder stage
+COPY --from=vendor /app/vendor ./vendor
 
-# Ensure storage and cache are writable
-RUN chmod -R 775 storage bootstrap/cache
+# Set permissions for Laravel
+RUN chown -R www-data:www-data \
+        /var/www/html/storage \
+        /var/www/html/bootstrap/cache
 
-# Expose port (Render sets $PORT)
-EXPOSE 8000
+# Expose port 9000 for PHP-FPM
+EXPOSE 9000
 
-# Start Laravel (artisan serve)
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+CMD ["php-fpm"]
