@@ -1,9 +1,10 @@
 # Use official PHP with required extensions
 FROM php:8.2-fpm
 
-# Install system dependencies
+# Install system dependencies + PostgreSQL dev libraries
 RUN apt-get update && apt-get install -y \
     git unzip libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev zip curl \
+    libpq-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd
 
