@@ -16,11 +16,16 @@ WORKDIR /var/www
 # Copy composer files first
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies without running artisan
+# Install PHP dependencies (no scripts yet)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
 # Copy rest of the application
 COPY . .
 
-# Run only cache commands (NOT migrations)
-CMD php artisan config:cache && php artisan route:cache && php-fpm
+# Expose port 8080 for Render
+EXPOSE 8080
+
+# Start Laravel with Artisan’s built-in server
+CMD php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan serve --host=0.0.0.0 --port=8080
