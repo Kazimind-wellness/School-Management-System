@@ -21,14 +21,19 @@ WORKDIR /var/www
 # Copy composer files first
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies (no scripts yet)
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
-# Copy rest of the application
+# Copy the rest of the application
 COPY . .
 
 # Install frontend dependencies + build with Vite
 RUN npm install && npm run build
+
+# ✅ Ensure Vite build files are inside /public/build
+# By default, Vite + Laravel plugin outputs to public/build
+# But in case it's dist/, copy it explicitly
+RUN if [ -d "dist" ]; then cp -r dist/* public/; fi
 
 # Expose port 8080 for Render
 EXPOSE 8080
