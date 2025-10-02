@@ -1,49 +1,26 @@
-# ----------------------
-# Stage 1: Build dependencies
-# ----------------------
-FROM php:8.2-cli AS vendor
-
-# Install system dependencies needed for composer
-RUN apt-get update && apt-get install -y \
-    git unzip curl libpng-dev libonig-dev libxml2-dev zip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
-
-# Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-WORKDIR /app
-
-# Copy composer files only (for caching)
-COPY composer.json composer.lock ./
-
-# Install PHP dependencies (production only)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
-# ----------------------
-# Stage 2: Application
-# ----------------------
+# Use official PHP with required extensions
 FROM php:8.2-fpm
 
-# Install system dependencies for PHP-FPM runtime
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git unzip curl libpng-dev libonig-dev libxml2-dev zip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    git unzip libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev zip curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
 
-WORKDIR /var/www/html
+# Install Composer (latest v2)
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy app source code
+# Set working directory
+WORKDIR /var/www
+
+# Copy composer files first
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies without running artisan
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
+
+# Copy rest of the application
 COPY . .
 
-# Copy vendor folder from builder stage
-COPY --from=vendor /app/vendor ./vendor
-
-# Set permissions for Laravel
-RUN chown -R www-data:www-data \
-        /var/www/html/storage \
-        /var/www/html/bootstrap/cache
-
-# Expose port (Render will set $PORT)
-EXPOSE 8000
-
-# Start Laravel (using artisan serve for Render simplicity)
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+# Run artisan commands only after deploy, not during build
+CMD php artisan config:cache && php artisan route:cache && php artisan migrate --force && php-fpm
