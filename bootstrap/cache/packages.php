@@ -1,10 +1,10 @@
 <?php return array (
   'ajcastro/eager-load-pivot-relations' => 
   array (
-    'providers' => 
+    'aliases' => 
     array (
     ),
-    'aliases' => 
+    'providers' => 
     array (
     ),
   ),
@@ -24,25 +24,25 @@
   ),
   'barryvdh/laravel-debugbar' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Barryvdh\\Debugbar\\ServiceProvider',
-    ),
     'aliases' => 
     array (
       'Debugbar' => 'Barryvdh\\Debugbar\\Facades\\Debugbar',
     ),
+    'providers' => 
+    array (
+      0 => 'Barryvdh\\Debugbar\\ServiceProvider',
+    ),
   ),
   'barryvdh/laravel-dompdf' => 
   array (
+    'aliases' => 
+    array (
+      'PDF' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
+      'Pdf' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
+    ),
     'providers' => 
     array (
       0 => 'Barryvdh\\DomPDF\\ServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Pdf' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
-      'PDF' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
     ),
   ),
   'beyondcode/laravel-query-detector' => 
@@ -61,13 +61,13 @@
   ),
   'intervention/image' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Intervention\\Image\\ImageServiceProvider',
-    ),
     'aliases' => 
     array (
       'Image' => 'Intervention\\Image\\Facades\\Image',
+    ),
+    'providers' => 
+    array (
+      0 => 'Intervention\\Image\\ImageServiceProvider',
     ),
   ),
   'laravel/breeze' => 
@@ -100,13 +100,13 @@
   ),
   'livewire/livewire' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Livewire\\LivewireServiceProvider',
-    ),
     'aliases' => 
     array (
       'Livewire' => 'Livewire\\Livewire',
+    ),
+    'providers' => 
+    array (
+      0 => 'Livewire\\LivewireServiceProvider',
     ),
   ),
   'nesbot/carbon' => 
@@ -130,15 +130,29 @@
       0 => 'Termwind\\Laravel\\TermwindServiceProvider',
     ),
   ),
-  'spatie/laravel-ignition' => 
+  'orchestra/canvas' => 
   array (
     'providers' => 
     array (
-      0 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
+      0 => 'Orchestra\\Canvas\\LaravelServiceProvider',
     ),
+  ),
+  'orchestra/canvas-core' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Orchestra\\Canvas\\Core\\LaravelServiceProvider',
+    ),
+  ),
+  'spatie/laravel-ignition' => 
+  array (
     'aliases' => 
     array (
       'Flare' => 'Spatie\\LaravelIgnition\\Facades\\Flare',
+    ),
+    'providers' => 
+    array (
+      0 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
     ),
   ),
   'spatie/laravel-medialibrary' => 
@@ -153,13 +167,6 @@
     'providers' => 
     array (
       0 => 'Spatie\\Permission\\PermissionServiceProvider',
-    ),
-  ),
-  'spatie/laravel-ray' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Spatie\\LaravelRay\\RayServiceProvider',
     ),
   ),
 );
