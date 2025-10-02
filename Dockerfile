@@ -1,14 +1,22 @@
 # ----------------------
 # Stage 1: Build dependencies
 # ----------------------
-FROM composer:2 AS vendor
+FROM php:8.2-cli AS vendor
+
+# Install system dependencies needed for composer
+RUN apt-get update && apt-get install -y \
+    git unzip curl libpng-dev libonig-dev libxml2-dev zip \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copy composer files only (caching layer)
+# Copy composer files only (for caching)
 COPY composer.json composer.lock ./
 
-# Install dependencies (production only)
+# Install PHP dependencies (production only)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 # ----------------------
@@ -16,7 +24,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 # ----------------------
 FROM php:8.2-fpm
 
-# Install system dependencies
+# Install system dependencies for PHP-FPM runtime
 RUN apt-get update && apt-get install -y \
     git unzip curl libpng-dev libonig-dev libxml2-dev zip \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
@@ -34,7 +42,8 @@ RUN chown -R www-data:www-data \
         /var/www/html/storage \
         /var/www/html/bootstrap/cache
 
-# Expose port 9000 for PHP-FPM
-EXPOSE 9000
+# Expose port (Render will set $PORT)
+EXPOSE 8000
 
-CMD ["php-fpm"]
+# Start Laravel (using artisan serve for Render simplicity)
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
