@@ -27,10 +27,9 @@ COPY . .
 
 # Install frontend dependencies & build assets
 RUN npm install && npm run build
-RUN ls -R public/build
 
-# ✅ Ensure Vite build files exist in public/build
-RUN ls -la public/build || echo "⚠️ Build folder missing!"
+# ✅ Ensure Vite build files exist
+RUN ls -la public/build
 
 # Expose port 8080
 EXPOSE 8080
