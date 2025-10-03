@@ -27,6 +27,7 @@ COPY . .
 
 # Install frontend dependencies & build assets
 RUN npm install && npm run build
+RUN ls -R public/build
 
 # ✅ Ensure Vite build files exist in public/build
 RUN ls -la public/build || echo "⚠️ Build folder missing!"
