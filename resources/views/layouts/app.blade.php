@@ -19,6 +19,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+<link rel="icon" type="image/x-icon" href="{{ secure_asset('storage/img/favicon.ico') }}">
     <title>{{ $title }}</title>
     @livewireStyles
 </head>

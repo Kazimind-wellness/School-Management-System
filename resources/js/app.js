@@ -1,7 +1,11 @@
+// resources/js/app.js
+import $ from 'jquery';
 import './bootstrap';
 import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
 import * as Turbo from '@hotwired/turbo';
+window.$ = window.jQuery = $;
+
 Alpine.plugin(collapse)
 window.Alpine = Alpine;
 document.addEventListener("livewire:load", function(event) {

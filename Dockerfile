@@ -27,6 +27,8 @@ COPY . .
 
 # Install frontend dependencies & build assets
 RUN npm install && npm run build
+npm install jquery
+
 
 # ✅ Ensure Vite build files exist
 RUN ls -la public/build
