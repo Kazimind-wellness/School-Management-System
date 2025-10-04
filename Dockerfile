@@ -1,4 +1,22 @@
-# Use official PHP with required extensions
+# Stage 1: Build frontend assets
+FROM node:18 as frontend
+
+WORKDIR /app
+
+# Copy package files first (better caching)
+COPY package.json package-lock.json* ./
+
+# Install frontend dependencies
+RUN npm install
+
+# Copy only the frontend resources needed for build
+COPY resources ./resources
+COPY vite.config.js ./
+
+# Build frontend assets
+RUN npm run build
+
+# Stage 2: PHP + Laravel
 FROM php:8.2-fpm
 
 # Install system dependencies
@@ -8,34 +26,29 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js + npm (for Vite build)
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs
-
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www
 
-# Copy composer files first
+# Copy composer files first for caching
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-# Copy entire app
+# Copy entire Laravel app
 COPY . .
 
-# Install frontend dependencies & build assets
-RUN npm install && npm run build
+# Copy built frontend assets from frontend stage
+COPY --from=frontend /app/public/build ./public/build
 
+# Fix permissions (important for Laravel cache/storage/logs)
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-# ✅ Ensure Vite build files exist
-RUN ls -la public/build
-
-# Expose port 8080
+# Expose port
 EXPOSE 8080
 
-# Start Laravel server
+# Start Laravel
 CMD php artisan config:clear \
     && php artisan cache:clear \
     && php artisan route:clear \
