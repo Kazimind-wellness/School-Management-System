@@ -1,5 +1,5 @@
-# Use official PHP with required extensions
-FROM php:8.2-fpm
+# Use official PHP with Apache for better Laravel serving
+FROM php:8.2-apache
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -16,7 +16,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Set working directory
-WORKDIR /var/www
+WORKDIR /var/www/html
+
+# Enable Apache rewrite module and configure document root
+RUN a2enmod rewrite
+RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
 # Copy composer files first
 COPY composer.json composer.lock ./
@@ -25,21 +29,23 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 # Copy entire app
 COPY . .
 
+# Set proper permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
+
 # Install frontend dependencies & build assets
-RUN npm install && npm run build 
-RUN npm install jquery
+COPY package.json package-lock.json* ./
+RUN npm ci && npm run build
 
+# Generate application key and optimize
+RUN php artisan key:generate --force || true \
+    && php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache
 
-# ✅ Ensure Vite build files exist
-RUN ls -la public/build
+# Expose port 80 (Apache default)
+EXPOSE 80
 
-# Expose port 8080
-EXPOSE 8080
-
-# Start Laravel server
-CMD php artisan config:clear \
-    && php artisan cache:clear \
-    && php artisan route:clear \
-    && php artisan view:clear \
-    && (php artisan storage:link || true) \
-    && php artisan serve --host=0.0.0.0 --port=8080
+# Start Apache server
+CMD ["apache2-foreground"]
