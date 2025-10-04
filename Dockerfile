@@ -18,15 +18,17 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy composer files first
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
+# Copy composer & npm files first (for caching)
+COPY composer.json composer.lock package.json package-lock.json ./
 
-# Copy entire app
-COPY . .
+# Install backend dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
 # Install frontend dependencies & build assets
 RUN npm install && npm run build
+
+# Copy entire app AFTER dependencies
+COPY . .
 
 # ✅ Ensure Vite build files exist
 RUN ls -la public/build
