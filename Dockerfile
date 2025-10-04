@@ -26,8 +26,8 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 COPY . .
 
 # Install frontend dependencies & build assets
-RUN npm install && npm run build
-npm install jquery
+RUN npm install && npm run build 
+RUN npm install jquery
 
 
 # ✅ Ensure Vite build files exist
