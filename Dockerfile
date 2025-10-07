@@ -44,4 +44,4 @@ EXPOSE 8080
 RUN php artisan migrate:reset || true
 
 # ---------- Run migrations then start Apache ----------
-CMD php artisan migrate:fresh --seed --force && apache2-foreground
+CMD php artisan migrate --force && apache2-foreground
