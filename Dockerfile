@@ -16,7 +16,7 @@ WORKDIR /var/www/html
 # ---------- Copy Composer and install PHP dependencies ----------
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || cat /var/www/html/storage/logs/laravel.log || true
 
 # ---------- Copy full application ----------
 COPY . .
@@ -27,6 +27,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && npm install \
     && npm run build \
     && rm -rf node_modules
+
+RUN composer diagnose || true
 
 # ---------- Apache document root ----------
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
