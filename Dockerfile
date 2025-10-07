@@ -47,5 +47,6 @@ EXPOSE 8080
 # Uncomment the next line if you want migrations to run automatically
 # RUN php artisan migrate --force || true
 
-# ---------- Start Apache ----------
-CMD ["apache2-foreground"]
+# ---------- Run migrations then start Apache ----------
+CMD php artisan migrate --seed --force && apache2-foreground
+
