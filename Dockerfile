@@ -38,6 +38,8 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 ENV APACHE_RUN_USER=www-data
 ENV APACHE_RUN_GROUP=www-data
 
-# ---------- Expose and start ----------
+# ---------- Expose ----------
 EXPOSE 8080
-CMD ["apache2-foreground"]
+
+# ---------- Run migrations then start Apache ----------
+CMD php artisan migrate --force && apache2-foreground
