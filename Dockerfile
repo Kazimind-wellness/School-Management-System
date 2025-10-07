@@ -1,41 +1,43 @@
-# Use official PHP with Apache
-FROM php:8.2-apache
+# Use the official PHP image
+FROM php:8.2-fpm
 
-# ---------- System dependencies ----------
-RUN apt-get update && apt-get install -y \
-    git unzip curl zip libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev libpq-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd opcache
-
-# ---------- Enable Apache rewrite ----------
-RUN a2enmod rewrite
-
-# ---------- Set working directory ----------
+# Set working directory
 WORKDIR /var/www/html
 
-# ---------- Copy composer and install dependencies ----------
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    zip \
+    unzip \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# ---------- Copy entire application ----------
+# Install Composer
+COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
+
+# Copy existing application files
 COPY . .
 
-# ---------- Node + Vite build ----------
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install \
-    && npm run build \
-    && rm -rf node_modules
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-# ---------- Apache document root ----------
-RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+# Copy the example env file & generate key
+RUN cp .env.example .env || true
 
-# ---------- Permissions ----------
+# Generate application key
+RUN php artisan key:generate
+
+# Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# ---------- Expose ----------
-EXPOSE 8080
+# Expose port 8000
+EXPOSE 8000
 
-# ---------- Default command ----------
-CMD php artisan migrate --force && php artisan db:seed --force && apache2-foreground
+# Start the Laravel app
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
