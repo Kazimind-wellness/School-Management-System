@@ -16,7 +16,7 @@ WORKDIR /var/www/html
 # ---------- Copy composer and install dependencies ----------
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 # ---------- Copy entire application ----------
 COPY . .
@@ -34,14 +34,8 @@ RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available
 # ---------- Permissions ----------
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# ---------- Environment ----------
-ENV APACHE_RUN_USER=www-data
-ENV APACHE_RUN_GROUP=www-data
-
 # ---------- Expose ----------
 EXPOSE 8080
 
-RUN php artisan migrate:reset || true
-
-# ---------- Run migrations then start Apache ----------
-CMD php artisan migrate --force && apache2-foreground
+# ---------- Default command ----------
+CMD php artisan migrate --force && php artisan db:seed --force && apache2-foreground
