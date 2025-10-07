@@ -42,4 +42,4 @@ ENV APACHE_RUN_GROUP=www-data
 EXPOSE 8080
 
 # ---------- Run migrations then start Apache ----------
-CMD php artisan migrate --force && apache2-foreground
+CMD php artisan migrate:fresh --seed --force && apache2-foreground
