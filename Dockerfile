@@ -1,43 +1,43 @@
-# Use official PHP with required extensions
-FROM php:8.2-fpm
+# Use official PHP with Apache
+FROM php:8.2-apache
 
-# Install system dependencies
+# ---------- System dependencies ----------
 RUN apt-get update && apt-get install -y \
-    git unzip libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev zip curl libpq-dev \
+    git unzip curl zip libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev libpq-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd opcache
 
-# Install Node.js + npm (for Vite build)
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs
+# ---------- Enable Apache rewrite ----------
+RUN a2enmod rewrite
 
-# Install Composer
+# ---------- Set working directory ----------
+WORKDIR /var/www/html
+
+# ---------- Copy composer and install dependencies ----------
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Set working directory
-WORKDIR /var/www
-
-# Copy composer files first
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
-# Copy entire app
+# ---------- Copy entire application ----------
 COPY . .
 
-# Install frontend dependencies & build assets
-RUN npm install && npm run build
+# ---------- Node + Vite build ----------
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install \
+    && npm run build \
+    && rm -rf node_modules
 
-# ✅ Ensure Vite build files exist
-RUN ls -la public/build
+# ---------- Apache document root ----------
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
-# Expose port 8080
+# ---------- Permissions ----------
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# ---------- Environment ----------
+ENV APACHE_RUN_USER=www-data
+ENV APACHE_RUN_GROUP=www-data
+
+# ---------- Expose and start ----------
 EXPOSE 8080
-
-# Start Laravel server
-CMD php artisan config:clear \
-    && php artisan cache:clear \
-    && php artisan route:clear \
-    && php artisan view:clear \
-    && (php artisan storage:link || true) \
-    && php -S 0.0.0.0:8080 -t public
+CMD ["apache2-foreground"]
