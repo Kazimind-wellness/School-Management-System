@@ -40,4 +40,4 @@ CMD php artisan config:clear \
     && php artisan route:clear \
     && php artisan view:clear \
     && (php artisan storage:link || true) \
-    && php artisan serve --host=0.0.0.0 --port=8080
+    && php -S 0.0.0.0:8080 -t public
