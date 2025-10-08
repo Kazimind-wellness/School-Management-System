@@ -45,8 +45,13 @@ EXPOSE 8080
 
 # ---------- (Optional) Safe migrations on deploy ----------
 # Uncomment the next line if you want migrations to run automatically
-# RUN php artisan migrate --force || true
+ RUN php artisan migrate --force || true
 
 # ---------- Run migrations then start Apache ----------
-CMD ["php artisan migrate --seed --force"] && ["apache2-foreground"]
+# Option 1: Using shell form (recommended for multiple commands)
+CMD php artisan migrate --seed --force && apache2-foreground
 
+# Option 2: Using a script file (more robust for complex operations)
+# COPY docker-entrypoint.sh /usr/local/bin/
+# RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# CMD ["/usr/local/bin/docker-entrypoint.sh"]
