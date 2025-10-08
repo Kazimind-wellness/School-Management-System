@@ -48,5 +48,5 @@ EXPOSE 8080
 # RUN php artisan migrate --force || true
 
 # ---------- Run migrations then start Apache ----------
-CMD ["apache2-foreground"]
+CMD ["php artisan migrate --seed --force"] && ["apache2-foreground"]
 
