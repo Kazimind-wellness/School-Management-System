@@ -56,6 +56,12 @@ services:
       npm run build
 
     startCommand: |
-      php artisan migrate --force || true
+      echo "⏳ Waiting for database to wake up..."
+      sleep 20
+      until php artisan migrate --force; do
+        echo "❌ Migration failed. Retrying in 10s..."
+        sleep 10
+      done
       php artisan db:seed --force || true
       apache2-foreground
+
