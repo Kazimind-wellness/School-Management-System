@@ -3,54 +3,38 @@ services:
     name: school-management-system
     env: docker
     plan: free
-    region: oregon
-    branch: main
-    autoDeploy: true
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
 
     envVars:
-      # Laravel app environment
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: false
+        value: true
       - key: APP_KEY
-        sync: false
+        value: base64:SzVeIfSNZbBv9s25ZijpnJhGXlraDRqATm872mbR49Y=
+      - key: APP_NAME
+        value: testing
       - key: APP_URL
         value: https://school-management-system-f74n.onrender.com
       - key: ASSET_URL
         value: https://school-management-system-f74n.onrender.com
 
-      # Database connection (from Render database service)
+      # Database (Neon)
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        fromDatabase:
-          name: school-management-db
-          property: host
+        value: ep-broad-pine-ae510988-pooler.c-2.us-east-2.aws.neon.tech
       - key: DB_PORT
-        fromDatabase:
-          name: school-management-db
-          property: port
+        value: 5432
       - key: DB_DATABASE
-        fromDatabase:
-          name: school-management-db
-          property: database
+        value: neondb
       - key: DB_USERNAME
-        fromDatabase:
-          name: school-management-db
-          property: user
+        value: neondb_owner
       - key: DB_PASSWORD
-        fromDatabase:
-          name: school-management-db
-          property: password
+        value: npg_pU2ZScF7LGNC
 
-      # Laravel session and cache
-      - key: CACHE_DRIVER
-        value: file
-      - key: SESSION_DRIVER
-        value: file
-
-      # Mail (you can set later if needed)
+      # Mail / Other configs
       - key: MAIL_MAILER
         value: smtp
       - key: MAIL_HOST
@@ -60,9 +44,19 @@ services:
       - key: MAIL_FROM_ADDRESS
         value: hello@example.com
       - key: MAIL_FROM_NAME
-        value: school-management-system
+        value: testing
 
-databases:
-  - name: school-management-db
-    plan: free
-    region: oregon
+      # File system
+      - key: FILESYSTEM_DISK
+        value: local
+
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+      npm install
+      npm run build
+
+    startCommand: apache2-foreground
+
+    postDeployCommand: |
+      php artisan migrate --force
+      php artisan db:seed --force
