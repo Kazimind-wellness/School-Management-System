@@ -55,8 +55,7 @@ services:
       npm install
       npm run build
 
-    startCommand: apache2-foreground
-
-    postDeployCommand: |
-      php artisan migrate --force
-      php artisan db:seed --force
+    startCommand: |
+      php artisan migrate --force || true
+      php artisan db:seed --force || true
+      apache2-foreground
